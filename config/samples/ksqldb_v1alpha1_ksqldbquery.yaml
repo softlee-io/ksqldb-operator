@@ -1,0 +1,12 @@
+apiVersion: ksqldb.softlee.io/v1alpha1
+kind: KsqldbQuery
+metadata:
+  labels:
+    app.kubernetes.io/name: ksqldbquery
+    app.kubernetes.io/instance: ksqldbquery-sample
+    app.kubernetes.io/part-of: ksqldb-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: ksqldb-operator
+  name: ksqldbquery-sample
+spec:
+  # TODO(user): Add fields here

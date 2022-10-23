@@ -1,0 +1,27 @@
+# permissions for end users to view ksqldbclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: ksqldbcluster-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: ksqldb-operator
+    app.kubernetes.io/part-of: ksqldb-operator
+    app.kubernetes.io/managed-by: kustomize
+  name: ksqldbcluster-viewer-role
+rules:
+- apiGroups:
+  - ksqldb.softlee.io
+  resources:
+  - ksqldbclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ksqldb.softlee.io
+  resources:
+  - ksqldbclusters/status
+  verbs:
+  - get

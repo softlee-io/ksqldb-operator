@@ -1,0 +1,5 @@
+## Append samples you want in your CSV to this file as resources ##
+resources:
+- ksqldb_v1alpha1_ksqldbcluster.yaml
+- ksqldb_v1alpha1_ksqldbquery.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

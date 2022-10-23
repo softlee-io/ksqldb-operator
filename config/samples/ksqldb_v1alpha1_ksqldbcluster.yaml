@@ -1,0 +1,12 @@
+apiVersion: ksqldb.softlee.io/v1alpha1
+kind: KsqldbCluster
+metadata:
+  labels:
+    app.kubernetes.io/name: ksqldbcluster
+    app.kubernetes.io/instance: ksqldbcluster-sample
+    app.kubernetes.io/part-of: ksqldb-operator
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: ksqldb-operator
+  name: ksqldbcluster-sample
+spec:
+  # TODO(user): Add fields here
