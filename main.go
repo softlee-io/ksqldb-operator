@@ -32,6 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
+	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/config"
+
 	"github.com/softlee-io/ksqldb-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
@@ -89,10 +91,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.KsqldbClusterReconciler{
+	if err = (controllers.NewReconciler(config.BaseParam{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
-	}).SetupWithManager(mgr); err != nil {
+		Log:    ctrl.Log.WithName("KsqlController"),
+	})).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "KsqldbCluster")
 		os.Exit(1)
 	}
