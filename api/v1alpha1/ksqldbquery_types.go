@@ -25,21 +25,21 @@ import (
 
 // KsqldbQuerySpec defines the desired state of KsqldbQuery
 type KsqldbQuerySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of KsqldbQuery. Edit ksqldbquery_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Name of KsqldbCluster Resource in the same namespace
+	KsqldbCluster string `json:"ksqldbCluster"`
+	// Permanent (= Push-based) KSQLDB Query
+	PermanentQuery string `json:"permanentQuery"`
 }
 
 // KsqldbQueryStatus defines the observed state of KsqldbQuery
 type KsqldbQueryStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	QueryStatus string `json:"queryStatus"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="queryStatus",type="string",JSONPath=".spec.status.queryStatus",description="Status of permanent query"
+// +operator-sdk:csv:customresourcedefinitions:displayName="KSQLDB Query"
 
 // KsqldbQuery is the Schema for the ksqldbqueries API
 type KsqldbQuery struct {

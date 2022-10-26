@@ -20,26 +20,58 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
-
-// KsqldbClusterSpec defines the desired state of KsqldbCluster
+// serviceID ("KSQL_KSQL_SERVICE_ID") will be created by f
 type KsqldbClusterSpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
-
-	// Foo is an example field of KsqldbCluster. Edit ksqldbcluster_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Version/image tag of Ksqldb
+	// Default: "latest"
+	// +optional
+	Version string `json:"version,omitempty"`
+	// replicas of Ksqldb Cluster deployment
+	// Default: "1"
+	// +optional
+	Replicas int `json:"replicas,omitempty"`
+	// Bootstrap servers
+	// +kubebuilder:validation:MinItems=1
+	BootstrapServers []string `json:"bootstrapServers"`
+	// e.g. "something_" will be used as a prefix for internal topics
+	// Default: "{namespace}_{ksqldb resource name}_"
+	// +optional
+	ServiceID string `json:"serviceID,omitempty"`
+	// number of replicas for KSQL topics (default: 1)
+	// +optional
+	SinkReplicas int `json:"sinkReplicas,omitempty"`
+	// replication factor of KSQL internal, command and output topics (default: 3)
+	// +optional
+	StreamReplicationFactor int `json:"streamReplicationFactor,omitempty"`
+	// replication factor of KSQL internal topics (default: 3)
+	// +optional
+	InternalTopicReplicas int `json:"internalTopicReplicas,omitempty"`
+	// Security Protocol of KSQL Cluster (e.g. "SASL_SSL")
+	// +optional
+	SecurityProtocol string `json:"securityProtocol,omitempty"`
+	// Sasl Mechanism used for Authentication (e.g. "PLAIN")
+	// +optional
+	SaslMechanism string `json:"saslMechanism,omitempty"`
+	// String format of JAAS Config (e.g. "org.apache.kafka.common.security.plain.PlainLoginModule required....")
+	// +optional
+	SaslJaasConfig string `json:"saslJaasConfig,omitempty"`
 }
 
 // KsqldbClusterStatus defines the observed state of KsqldbCluster
 type KsqldbClusterStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+	// +optional
+	Version string `json:"version"`
+	// +optional
+	Replicas int `json:"replica"`
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:subresource:scale:specpath=.spec.replicas,statuspath=.status.replicas,selectorpath=.status.selector
+// +kubebuilder:printcolumn:name="Replicas",type="int",JSONPath=".spec.replicas",description="Replicas"
+// +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".status.version",description="KSQLDB Version"
+// +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +operator-sdk:csv:customresourcedefinitions:displayName="KSQLDB Cluster"
 
 // KsqldbCluster is the Schema for the ksqldbclusters API
 type KsqldbCluster struct {

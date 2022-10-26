@@ -13,6 +13,7 @@ type ClusterReconciler struct {
 }
 
 func (r ClusterReconciler) Start(ctx context.Context) error {
+	//r.Instance.
 	return nil
 }
 

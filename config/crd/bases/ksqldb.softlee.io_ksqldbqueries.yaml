@@ -1,0 +1,65 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.10.0
+  creationTimestamp: null
+  name: ksqldbqueries.ksqldb.softlee.io
+spec:
+  group: ksqldb.softlee.io
+  names:
+    kind: KsqldbQuery
+    listKind: KsqldbQueryList
+    plural: ksqldbqueries
+    singular: ksqldbquery
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - description: Status of permanent query
+      jsonPath: .spec.status.queryStatus
+      name: queryStatus
+      type: string
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: KsqldbQuery is the Schema for the ksqldbqueries API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: KsqldbQuerySpec defines the desired state of KsqldbQuery
+            properties:
+              ksqldbCluster:
+                description: Name of KsqldbCluster Resource in the same namespace
+                type: string
+              permanentQuery:
+                description: Permanent (= Push-based) KSQLDB Query
+                type: string
+            required:
+            - ksqldbCluster
+            - permanentQuery
+            type: object
+          status:
+            description: KsqldbQueryStatus defines the observed state of KsqldbQuery
+            properties:
+              queryStatus:
+                type: string
+            required:
+            - queryStatus
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
