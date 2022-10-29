@@ -7,11 +7,28 @@ import (
 	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/config"
 )
 
-type QueryReconciler struct {
+type QueryReconcilerConfig struct {
 	config.BaseParam
 	Instance ksqldbv1alpha1.KsqldbQuery
 }
 
-func (r QueryReconciler) Start(ctx context.Context) error {
+func (c QueryReconcilerConfig) Validate() error {
+	//TODO: Impl validation logic
+	return nil
+}
+
+type queryReconciler struct {
+	config QueryReconcilerConfig
+}
+
+func NewQueryReconciler(config QueryReconcilerConfig) queryReconciler {
+	return queryReconciler{
+		config: config,
+	}
+}
+
+// No provision task included:
+// - ksqldb api calls towards selected ksqldb cluste
+func (r queryReconciler) Start(ctx context.Context) error {
 	return nil
 }

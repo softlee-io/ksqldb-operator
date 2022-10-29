@@ -77,14 +77,16 @@ func (r *KsqldbReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 				var clusterInstance v1alpha1.KsqldbCluster
 				curErr = r.getObject(ctx, req, &clusterInstance)
 				if curErr == nil {
-					return ctrl.Result{}, (cluster.ClusterReconciler{BaseParam: r.base, Instance: clusterInstance}).Start(ctx)
+					config := cluster.ClusterReconcilerConfig{BaseParam: r.base, Instance: clusterInstance}
+					return ctrl.Result{}, (cluster.NewClusterReconciler(config)).Start(ctx)
 				}
 				break
 			case KSQLDB_QUERY:
 				var queryInstance v1alpha1.KsqldbQuery
 				curErr = r.getObject(ctx, req, &queryInstance)
 				if curErr == nil {
-					return ctrl.Result{}, (query.QueryReconciler{BaseParam: r.base, Instance: queryInstance}).Start(ctx)
+					config := query.QueryReconcilerConfig{BaseParam: r.base, Instance: queryInstance}
+					return ctrl.Result{}, (query.NewQueryReconciler(config)).Start(ctx)
 				}
 				break
 			}
