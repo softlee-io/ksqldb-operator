@@ -23,9 +23,9 @@ import (
 	"github.com/samber/lo"
 	"github.com/softlee-io/ksqldb-operator/api/v1alpha1"
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
-	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/cluster"
-	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/config"
-	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/query"
+	"github.com/softlee-io/ksqldb-operator/pkg/cluster"
+	"github.com/softlee-io/ksqldb-operator/pkg/config"
+	"github.com/softlee-io/ksqldb-operator/pkg/query"
 
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -76,19 +76,19 @@ func (r *KsqldbReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctr
 			case KSQLDB_CLUSTER:
 				var clusterInstance v1alpha1.KsqldbCluster
 				curErr = r.getObject(ctx, req, &clusterInstance)
-				if curErr == nil {
-					config := cluster.ClusterReconcilerConfig{BaseParam: r.base, Instance: clusterInstance}
-					return ctrl.Result{}, (cluster.NewClusterReconciler(config)).Start(ctx)
+				if curErr != nil {
+					break
 				}
-				break
+				config := cluster.ClusterReconcilerConfig{BaseParam: r.base, Instance: clusterInstance}
+				return ctrl.Result{}, (cluster.NewClusterReconciler(config)).Start(ctx)
 			case KSQLDB_QUERY:
 				var queryInstance v1alpha1.KsqldbQuery
 				curErr = r.getObject(ctx, req, &queryInstance)
-				if curErr == nil {
-					config := query.QueryReconcilerConfig{BaseParam: r.base, Instance: queryInstance}
-					return ctrl.Result{}, (query.NewQueryReconciler(config)).Start(ctx)
+				if curErr != nil {
+					break
 				}
-				break
+				config := query.QueryReconcilerConfig{BaseParam: r.base, Instance: queryInstance}
+				return ctrl.Result{}, (query.NewQueryReconciler(config)).Start(ctx)
 			}
 			arrErr = append(arrErr, curErr)
 		}

@@ -5,11 +5,11 @@ import (
 	"errors"
 
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
-	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/config"
+	"github.com/softlee-io/ksqldb-operator/pkg/config"
 )
 
 type clusterTask interface {
-	run(clusterRecon ClusterReconcilerConfig) error
+	Run(ctx context.Context, config ClusterReconcilerConfig) error
 }
 
 type ClusterReconcilerConfig struct {
@@ -24,21 +24,36 @@ func (c ClusterReconcilerConfig) Validate() error {
 
 type clusterReconciler struct {
 	config ClusterReconcilerConfig
+	tasks  []clusterTask
 }
 
 func NewClusterReconciler(config ClusterReconcilerConfig) clusterReconciler {
 	return clusterReconciler{
 		config: config,
+		tasks:  nil,
 	}
 }
 
-func (r clusterReconciler) initTasks() error {
-	err := r.config.Validate()
+func (r *clusterReconciler) initTasks() error {
+	var (
+		err error
+	)
+
+	err = r.config.Validate()
 	if err != nil {
 		return errors.New("") // TODO: precise error consolidation
 	}
+	// Sequential Reconciliation
+	tasks := []clusterTask{
+		newConfigmapTask(),
+		newSecretTask(),
+		newDeploymentTask(),
+	}
+	if !r.config.Instance.Spec.ServiceResourceDisabled {
+		tasks = append(tasks, newServiceTask())
+	}
 
-	//Task definition
+	r.tasks = tasks
 
 	return err
 }
@@ -46,20 +61,23 @@ func (r clusterReconciler) initTasks() error {
 func (r clusterReconciler) Start(ctx context.Context) error {
 	/*
 		For each kubernetes resource
-		1. desiredResource
+		1. Init & interate task execution
+		2. desiredResource
 		- Must be sequentially executed: Configmap -> Secret -> Deployment -> (opt. justification: ksql api can be called over pod DNS ) Service
 		- for instance: constructing deployment resource configuration
-		2.
-		- controllerutil.SetControllerReference(
-		3.
-		-
+		3. Error Handling
 	*/
-	// desiredState
-	return nil
-}
+	var (
+		err error
+	)
 
-func (r clusterReconciler) deployment(ctx context.Context) error {
-	//desired :=
+	r.initTasks()
+	for _, task := range r.tasks {
+		err = task.Run(ctx, r.config)
+		if err != nil {
+			return err
+		}
+	}
 
-	return nil
+	return err
 }

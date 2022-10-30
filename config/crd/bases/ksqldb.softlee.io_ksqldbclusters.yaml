@@ -74,6 +74,10 @@ spec:
                 description: 'e.g. "something_" will be used as a prefix for internal
                   topics Default: "{namespace}_{ksqldb resource name}_"'
                 type: string
+              serviceResourceDisabled:
+                description: 'creation k8s service resource on the ksqldb cluster(default:
+                  true)'
+                type: boolean
               sinkReplicas:
                 description: 'number of replicas for KSQL topics (default: 1)'
                 type: integer

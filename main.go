@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
-	"github.com/softlee-io/ksqldb-operator/internal/internalreconciler/config"
+	"github.com/softlee-io/ksqldb-operator/pkg/config"
 
 	"github.com/softlee-io/ksqldb-operator/controllers"
 	//+kubebuilder:scaffold:imports

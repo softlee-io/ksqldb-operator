@@ -55,6 +55,9 @@ type KsqldbClusterSpec struct {
 	// String format of JAAS Config (e.g. "org.apache.kafka.common.security.plain.PlainLoginModule required....")
 	// +optional
 	SaslJaasConfig string `json:"saslJaasConfig,omitempty"`
+	// creation k8s service resource on the ksqldb cluster(default: true)
+	// +optional
+	ServiceResourceDisabled bool `json:"serviceResourceDisabled,omitempty"`
 }
 
 // KsqldbClusterStatus defines the observed state of KsqldbCluster

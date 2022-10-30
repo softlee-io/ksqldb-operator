@@ -23,12 +23,23 @@ import (
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
+type KsqldbQueryType string
+
+const (
+	ONE_TIME KsqldbQueryType = "onetime"
+	STREAM   KsqldbQueryType = "stream"
+)
+
 // KsqldbQuerySpec defines the desired state of KsqldbQuery
 type KsqldbQuerySpec struct {
 	// Name of KsqldbCluster Resource in the same namespace
 	KsqldbCluster string `json:"ksqldbCluster"`
-	// Permanent (= Push-based) KSQLDB Query
-	PermanentQuery string `json:"permanentQuery"`
+	// KSQLDB Query
+	Query string `json:"query"`
+	// KSQLDB Query type
+	// allowed value: "onetime", "stream" (default)
+	// + optional
+	QueryType KsqldbQueryType `json:"queryType,omitempty"`
 }
 
 // KsqldbQueryStatus defines the observed state of KsqldbQuery
@@ -38,7 +49,7 @@ type KsqldbQueryStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:printcolumn:name="queryStatus",type="string",JSONPath=".spec.status.queryStatus",description="Status of permanent query"
+// +kubebuilder:printcolumn:name="queryStatus",type="string",JSONPath=".spec.status.queryStatus",description="Status of query"
 // +operator-sdk:csv:customresourcedefinitions:displayName="KSQLDB Query"
 
 // KsqldbQuery is the Schema for the ksqldbqueries API

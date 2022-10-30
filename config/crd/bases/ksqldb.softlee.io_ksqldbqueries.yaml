@@ -16,7 +16,7 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
-    - description: Status of permanent query
+    - description: Status of query
       jsonPath: .spec.status.queryStatus
       name: queryStatus
       type: string
@@ -43,12 +43,16 @@ spec:
               ksqldbCluster:
                 description: Name of KsqldbCluster Resource in the same namespace
                 type: string
-              permanentQuery:
-                description: Permanent (= Push-based) KSQLDB Query
+              query:
+                description: KSQLDB Query
+                type: string
+              queryType:
+                description: 'KSQLDB Query type allowed value: "onetime", "stream"
+                  (default)'
                 type: string
             required:
             - ksqldbCluster
-            - permanentQuery
+            - query
             type: object
           status:
             description: KsqldbQueryStatus defines the observed state of KsqldbQuery
