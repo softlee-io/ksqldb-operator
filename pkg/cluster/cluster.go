@@ -45,7 +45,6 @@ func (r *clusterReconciler) initTasks() error {
 	}
 	// Sequential Reconciliation
 	tasks := []clusterTask{
-		newConfigmapTask(),
 		newSecretTask(),
 		newDeploymentTask(),
 	}
