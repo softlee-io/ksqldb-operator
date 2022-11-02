@@ -5,7 +5,11 @@ import (
 	"fmt"
 
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
+	"github.com/softlee-io/ksqldb-operator/pkg/util/strutil"
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -46,5 +50,30 @@ func (t deploymentTask) Run(ctx context.Context, config ClusterReconcilerConfig)
 
 func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Deployment {
 	//TODO: Implement
-	return appsv1.Deployment{}
+	// ref: https://docs.ksqldb.io/en/latest/operate-and-deploy/installation/install-ksqldb-with-docker/
+
+	ins.Spec.DefaultServiceID(ins.Namespace, ins.Name)
+	dpl := appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        strutil.DNSName(strutil.Truncate("%s-ksqldbcluster", 63, ins.Name)),
+			Namespace:   ins.Namespace,
+			Labels:      ins.Labels,
+			Annotations: ins.Annotations,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &ins.Spec.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: SelectorLabels(ins),
+			},
+			Template: corev1.PodTemplateSpec{},
+		},
+		//TODO:
+	}
+
+	// Container setting
+	ct := corev1.Container{}
+	// Container Merge
+	dpl.Spec.Template.Spec.Containers = append(dpl.Spec.Template.Spec.Containers, ct)
+
+	return dpl
 }

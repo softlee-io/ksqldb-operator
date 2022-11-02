@@ -17,6 +17,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -24,12 +26,14 @@ import (
 type KsqldbClusterSpec struct {
 	// Version/image tag of Ksqldb
 	// Default: "latest"
+	// +kubebuilder:default=latest
 	// +optional
 	Version string `json:"version,omitempty"`
 	// replicas of Ksqldb Cluster deployment
 	// Default: "1"
+	// +kubebuilder:default=1
 	// +optional
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 	// Bootstrap servers
 	// +kubebuilder:validation:MinItems=1
 	BootstrapServers []string `json:"bootstrapServers"`
@@ -38,12 +42,15 @@ type KsqldbClusterSpec struct {
 	// +optional
 	ServiceID string `json:"serviceID,omitempty"`
 	// number of replicas for KSQL topics (default: 1)
+	// +kubebuilder:default=1
 	// +optional
 	SinkReplicas int `json:"sinkReplicas,omitempty"`
 	// replication factor of KSQL internal, command and output topics (default: 3)
+	// +kubebuilder:default=3
 	// +optional
 	StreamReplicationFactor int `json:"streamReplicationFactor,omitempty"`
 	// replication factor of KSQL internal topics (default: 3)
+	// +kubebuilder:default=3
 	// +optional
 	InternalTopicReplicas int `json:"internalTopicReplicas,omitempty"`
 	// Security Protocol of KSQL Cluster (e.g. "SASL_SSL")
@@ -56,8 +63,15 @@ type KsqldbClusterSpec struct {
 	// +optional
 	SaslJaasConfig string `json:"saslJaasConfig,omitempty"`
 	// creation k8s service resource on the ksqldb cluster(default: true)
+	// +kubebuilder:default=true
 	// +optional
 	ServiceResourceDisabled bool `json:"serviceResourceDisabled,omitempty"`
+}
+
+func (spec *KsqldbClusterSpec) DefaultServiceID(namespace, name string) {
+	if len(spec.ServiceID) == 0 {
+		spec.ServiceID = fmt.Sprintf("%s_%s_", namespace, name)
+	}
 }
 
 // KsqldbClusterStatus defines the observed state of KsqldbCluster

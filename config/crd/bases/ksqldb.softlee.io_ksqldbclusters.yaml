@@ -54,11 +54,14 @@ spec:
                 minItems: 1
                 type: array
               internalTopicReplicas:
+                default: 3
                 description: 'replication factor of KSQL internal topics (default:
                   3)'
                 type: integer
               replicas:
+                default: 1
                 description: 'replicas of Ksqldb Cluster deployment Default: "1"'
+                format: int32
                 type: integer
               saslJaasConfig:
                 description: String format of JAAS Config (e.g. "org.apache.kafka.common.security.plain.PlainLoginModule
@@ -75,17 +78,21 @@ spec:
                   topics Default: "{namespace}_{ksqldb resource name}_"'
                 type: string
               serviceResourceDisabled:
+                default: true
                 description: 'creation k8s service resource on the ksqldb cluster(default:
                   true)'
                 type: boolean
               sinkReplicas:
+                default: 1
                 description: 'number of replicas for KSQL topics (default: 1)'
                 type: integer
               streamReplicationFactor:
+                default: 3
                 description: 'replication factor of KSQL internal, command and output
                   topics (default: 3)'
                 type: integer
               version:
+                default: latest
                 description: 'Version/image tag of Ksqldb Default: "latest"'
                 type: string
             required:
