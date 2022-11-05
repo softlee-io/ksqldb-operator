@@ -12,7 +12,10 @@ require (
 	sigs.k8s.io/controller-runtime v0.13.0
 )
 
-require github.com/pmezard/go-difflib v1.0.0 // indirect
+require (
+	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+)
 
 require (
 	cloud.google.com/go v0.97.0 // indirect

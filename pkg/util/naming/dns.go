@@ -12,23 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package naming
 
 import (
-	"context"
-	"fmt"
+	"regexp"
+	"strings"
+	"unicode/utf8"
 )
 
-const (
-	keyJaasConfig = "jaasConfig"
-)
+var regex = regexp.MustCompile(`[a-z0-9]`)
 
-func newSecretTask() clusterTask {
-	return secretTask{}
-}
+// source: https://github.com/jaegertracing/jaeger-operator/blob/91e3b69ee5c8761bbda9d3cf431400a73fc1112a/pkg/util/dns_name.go#L15
+func DNSName(name string) string {
+	var d []rune
 
-type secretTask struct{}
+	for i, x := range strings.ToLower(name) {
+		if regex.Match([]byte(string(x))) {
+			d = append(d, x)
+		} else {
+			if i == 0 || i == utf8.RuneCountInString(name)-1 {
+				d = append(d, 'a')
+			} else {
+				d = append(d, '-')
+			}
+		}
+	}
 
-func (secretTask) Run(ctx context.Context, config ClusterReconcilerConfig) error {
-	return fmt.Errorf("not implemented")
+	return string(d)
 }

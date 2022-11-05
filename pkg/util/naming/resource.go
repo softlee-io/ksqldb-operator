@@ -12,23 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package naming
 
-import (
-	"context"
-	"fmt"
-)
-
-const (
-	keyJaasConfig = "jaasConfig"
-)
-
-func newSecretTask() clusterTask {
-	return secretTask{}
+func Deployment(cluster string) string {
+	return DNSName(Truncate("%s-ksqldbcluster", 63, cluster))
 }
 
-type secretTask struct{}
-
-func (secretTask) Run(ctx context.Context, config ClusterReconcilerConfig) error {
-	return fmt.Errorf("not implemented")
+func Secret(cluster string) string {
+	return DNSName(Truncate("ksqldbcluster-%s-secret", 63, cluster))
 }

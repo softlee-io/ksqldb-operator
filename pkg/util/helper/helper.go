@@ -12,23 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package cluster
+package helper
 
-import (
-	"context"
-	"fmt"
-)
-
-const (
-	keyJaasConfig = "jaasConfig"
-)
-
-func newSecretTask() clusterTask {
-	return secretTask{}
-}
-
-type secretTask struct{}
-
-func (secretTask) Run(ctx context.Context, config ClusterReconcilerConfig) error {
-	return fmt.Errorf("not implemented")
+func Pointer[T any](val T) *T {
+	return &val
 }

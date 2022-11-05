@@ -1,0 +1,11 @@
+GOCMD?= go
+
+TOOLS_MOD_DIR := ./internal/tools
+
+.PHONY: install-tools
+install-tools:
+	cd $(TOOLS_MOD_DIR) && $(GOCMD) install github.com/google/addlicense
+
+.PHONY: addlicense
+addlicense:
+	addlicense -c "Softlee.io Authors" --ignore vendor/* .

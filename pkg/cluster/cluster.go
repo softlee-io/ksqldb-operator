@@ -1,3 +1,17 @@
+// Copyright 2022 Softlee.io Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cluster
 
 import (
@@ -62,7 +76,7 @@ func (r clusterReconciler) Start(ctx context.Context) error {
 		For each kubernetes resource
 		1. Init & interate task execution
 		2. desiredResource
-		- Must be sequentially executed: Configmap -> Secret -> Deployment -> (opt. justification: ksql api can be called over pod DNS ) Service
+		- Must be sequentially executed: Secret -> Deployment -> (opt. justification: ksql api can be called over pod DNS ) Service
 		- for instance: constructing deployment resource configuration
 		3. Error Handling
 	*/
