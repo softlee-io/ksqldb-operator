@@ -1,0 +1,52 @@
+{
+	"type": "record",
+	"name": "Order",
+	"namespace" : "de.topic.in",
+	"doc": "value schema for incoming topic ex) order",
+	"fields": [
+		{
+			"name": "eventName", 
+			"type": "string",
+			"default": "order_created"
+		},
+		{
+			"name": "name", 
+			"type": "string"
+		},
+		{
+			"name": "familyName", 
+			"type": "string"
+		},
+		{
+			"name": "birth", 
+			"type": {
+				"type": "int",
+				"logicalType": "date"
+			}
+		},
+		{
+			"name": "customId", 
+			"type": "string"
+		},
+		{
+			"name": "unitPrice", 
+			"type": "double", 
+			"default": 0
+		},
+		{
+			"name": "amount", 
+			"type": "int", 
+			"default": 0
+		},
+		{
+			"name": "credit", 
+			"type": "double", 
+			"default": 0
+		},
+		{
+			"name": "distance",
+			"type": "int",
+			"default": 0
+		}
+	]
+}
