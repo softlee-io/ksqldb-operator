@@ -18,14 +18,13 @@ import (
 	"context"
 	"testing"
 
-	"github.com/go-logr/logr"
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
 	"github.com/softlee-io/ksqldb-operator/pkg/config"
-	"github.com/stretchr/testify/assert"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/klog/v2/klogr"
 
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -34,9 +33,7 @@ func TestDeployment(t *testing.T) {
 	ct := newDeploymentTask()
 	ctx := context.Background()
 	scheme := runtime.NewScheme()
-	log, err := logr.FromContext(ctx)
-
-	assert.NotNil(t, err)
+	log := klogr.New()
 
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 	utilruntime.Must(ksqldbv1alpha1.AddToScheme(scheme))

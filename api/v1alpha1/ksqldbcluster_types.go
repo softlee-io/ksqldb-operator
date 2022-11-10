@@ -89,6 +89,7 @@ type KsqldbClusterStatus struct {
 // +kubebuilder:printcolumn:name="Version",type="string",JSONPath=".status.version",description="KSQLDB Version"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +operator-sdk:csv:customresourcedefinitions:displayName="KSQLDB Cluster"
+// +operator-sdk:csv:customresourcedefinitions:resources={{Pod,v1},{Deployment,apps/v1},{Secret,v1}}
 
 // KsqldbCluster is the Schema for the ksqldbclusters API
 type KsqldbCluster struct {

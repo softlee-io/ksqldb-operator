@@ -19,6 +19,8 @@ import (
 	"fmt"
 )
 
+// +kubebuilder:rbac:groups="",resources=services,verbs=get;list;watch;create;update;patch;delete
+
 func newServiceTask() clusterTask {
 	return serviceTask{}
 }

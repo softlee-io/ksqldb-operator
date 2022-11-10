@@ -19,6 +19,8 @@ import (
 	"fmt"
 )
 
+// +kubebuilder:rbac:groups="v1",resources=secrets,verbs=get;list;watch;create;update;patch;delete
+
 const (
 	keyJaasConfig = "jaasConfig"
 )

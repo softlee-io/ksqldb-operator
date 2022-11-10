@@ -20,7 +20,6 @@ import (
 
 	ksqldbv1alpha1 "github.com/softlee-io/ksqldb-operator/api/v1alpha1"
 	"github.com/softlee-io/ksqldb-operator/pkg/util/naming"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +28,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
+
+// +kubebuilder:rbac:groups="apps",resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 func newDeploymentTask() clusterTask {
 	return deploymentTask{}
@@ -57,23 +58,12 @@ func (t deploymentTask) Run(ctx context.Context, config ClusterReconcilerConfig)
 			return fmt.Errorf("error on deployment creation: %w", err)
 		}
 		config.BaseParam.Log.Info("ksqldbcluster deployment created", "name", desired.Name, "namespace", desired.Namespace)
+		return nil
 	} else if err != nil {
 		return fmt.Errorf("error on getting resource: %w", err)
 	}
-	//TODO: validation
 
-	//TODO:
-	//- Route through ErrorHnadling (doesExist)
-	//- IsNotFound error
-	//	- createDesired
-	//	- compareWithDesired
-	//- Other Errors
-	//	- returen directly
-	//- IfFound
-	//	- patchResource
-
-	//TODO: HPA
-	return fmt.Errorf("not implemented")
+	return err
 }
 
 func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Deployment {
