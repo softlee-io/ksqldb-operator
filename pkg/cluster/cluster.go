@@ -22,8 +22,19 @@ import (
 	"github.com/softlee-io/ksqldb-operator/pkg/config"
 )
 
+type Action string
+
+const (
+	CREATED Action = "created"
+	UPDATED Action = "updated"
+	DELETED Action = "deleted"
+	NONE    Action = "none"
+	ERROR   Action = "error"
+)
+
 type clusterTask interface {
-	Run(ctx context.Context, config ClusterReconcilerConfig) error
+	Name() string
+	Run(ctx context.Context, config ClusterReconcilerConfig) (Action, error)
 }
 
 type ClusterReconcilerConfig struct {
@@ -86,10 +97,11 @@ func (r clusterReconciler) Start(ctx context.Context) error {
 
 	r.initTasks()
 	for _, task := range r.tasks {
-		err = task.Run(ctx, r.config)
+		action, err := task.Run(ctx, r.config)
 		if err != nil {
 			return err
 		}
+		r.config.Log.Info("action (%s) on task (%s) successfully executed", action, task.Name())
 	}
 
 	return err

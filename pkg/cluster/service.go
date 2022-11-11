@@ -27,6 +27,10 @@ func newServiceTask() clusterTask {
 
 type serviceTask struct{}
 
-func (serviceTask) Run(ctx context.Context, config ClusterReconcilerConfig) error {
-	return fmt.Errorf("not implemented")
+func (serviceTask) Name() string {
+	return "serviceTask"
+}
+
+func (serviceTask) Run(ctx context.Context, config ClusterReconcilerConfig) (Action, error) {
+	return ERROR, fmt.Errorf("not implemented")
 }

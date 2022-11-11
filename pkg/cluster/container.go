@@ -23,9 +23,11 @@ import (
 	"github.com/softlee-io/ksqldb-operator/pkg/util/helper"
 	"github.com/softlee-io/ksqldb-operator/pkg/util/naming"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
+	// Env names
 	bootstrapServers        = "KSQL_BOOTSTRAP_SERVERS"
 	listeners               = "KSQL_LISTENERS"
 	serviceID               = "KSQL_KSQL_SERVICE_ID"
@@ -35,28 +37,35 @@ const (
 	securityProtocol        = "KSQL_SECURITY_PROTOCOL"
 	saslMechanism           = "KSQL_SASL_MECHANISM"
 	saslJaasConfig          = "KSQL_SASL_JAAS_CONFIG"
+	// other consts
+	port            int32 = 8088
+	healthcheckPath       = "/healthcheck"
 )
+
+//var
 
 func Container(ins ksqldbv1alpha1.KsqldbCluster) corev1.Container {
 	container := corev1.Container{
-		Name:  "ksqldb-cluster",
-		Image: fmt.Sprintf("confluentinc/ksqldb-server:%s", ins.Spec.Version),
-		Ports: []corev1.ContainerPort{ContainerPort()},
-		Env:   Env(ins),
-		//TODO: Resource, Livenessprobe, Readinessprobe
+		Name:           "ksqldb-cluster",
+		Image:          fmt.Sprintf("confluentinc/ksqldb-server:%s", ins.Spec.Version),
+		Ports:          []corev1.ContainerPort{containerPort()},
+		Env:            env(ins),
+		ReadinessProbe: probe(10, 10, 10), //TODO: realistic value after reciliency test
+		LivenessProbe:  probe(10, 60, 15), //TODO: realistic value after reciliency test
+		Resources:      resource(),
 	}
 	//TODO: further refinement processing: validation
 	return container
 }
 
-func ContainerPort() corev1.ContainerPort {
+func containerPort() corev1.ContainerPort {
 	return corev1.ContainerPort{
 		Name:          "api",
-		ContainerPort: 8088,
+		ContainerPort: port,
 	}
 }
 
-func Env(ins ksqldbv1alpha1.KsqldbCluster) []corev1.EnvVar {
+func env(ins ksqldbv1alpha1.KsqldbCluster) []corev1.EnvVar {
 	res := []corev1.EnvVar{
 		{
 			Name:  bootstrapServers,
@@ -115,4 +124,22 @@ func Env(ins ksqldbv1alpha1.KsqldbCluster) []corev1.EnvVar {
 	}
 
 	return res
+}
+
+func probe(timeout int32, period int32, terminationGrace int64) *corev1.Probe {
+	return &corev1.Probe{
+		TimeoutSeconds:                timeout,
+		PeriodSeconds:                 period,
+		TerminationGracePeriodSeconds: helper.Pointer(int64(terminationGrace)),
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: healthcheckPath,
+				Port: intstr.IntOrString{IntVal: port},
+			},
+		},
+	}
+}
+
+func resource() corev1.ResourceRequirements {
+	return corev1.ResourceRequirements{}
 }

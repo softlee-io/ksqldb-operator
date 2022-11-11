@@ -26,6 +26,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -37,33 +38,113 @@ func newDeploymentTask() clusterTask {
 
 type deploymentTask struct{}
 
-func (t deploymentTask) Run(ctx context.Context, config ClusterReconcilerConfig) error {
+func (t deploymentTask) Name() string {
+	return "deploymentTask"
+}
+
+func (t deploymentTask) Run(ctx context.Context, config ClusterReconcilerConfig) (Action, error) {
 	var (
-		err      error
-		desired  appsv1.Deployment
-		existing *appsv1.Deployment = &appsv1.Deployment{}
+		err               error
+		actionAfterApply  Action
+		actionAfterDelete Action
+		desired           appsv1.Deployment
 	)
 
 	desired = t.genDesired(config.Instance)
+	if actionAfterApply, err = t.apply(ctx, config, desired); err != nil {
+		return actionAfterApply, err
+	}
 
-	err = controllerutil.SetControllerReference(&config.Instance, &desired, config.Scheme)
+	if actionAfterDelete, err = t.delete(ctx, config, desired); err != nil {
+		return actionAfterDelete, err
+	}
+
+	if actionAfterDelete == NONE {
+		return actionAfterApply, err
+	}
+
+	return actionAfterDelete, err
+}
+
+func (t deploymentTask) apply(ctx context.Context, config ClusterReconcilerConfig, desired appsv1.Deployment) (Action, error) {
+	existing := &appsv1.Deployment{}
+
+	err := controllerutil.SetControllerReference(&config.Instance, &desired, config.Scheme)
 	if err != nil {
-		return fmt.Errorf("failed to set controller reference: %w", err)
+		return ERROR, fmt.Errorf("failed to set controller reference: %w", err)
 	}
 
 	nsName := types.NamespacedName{Namespace: desired.Namespace, Name: desired.Name}
 	err = config.Client.Get(ctx, nsName, existing)
 	if err != nil && k8serrors.IsNotFound(err) {
 		if err := config.BaseParam.Client.Create(ctx, &desired); err != nil {
-			return fmt.Errorf("error on deployment creation: %w", err)
+			return ERROR, fmt.Errorf("error on deployment creation: %w", err)
 		}
 		config.BaseParam.Log.Info("ksqldbcluster deployment created", "name", desired.Name, "namespace", desired.Namespace)
-		return nil
+		return CREATED, nil
 	} else if err != nil {
-		return fmt.Errorf("error on getting resource: %w", err)
+		return ERROR, fmt.Errorf("error on getting resource: %w", err)
 	}
 
-	return err
+	updated := existing.DeepCopy()
+	if updated.Labels == nil {
+		existing.Labels = map[string]string{}
+	}
+	if updated.Annotations == nil {
+		existing.Annotations = map[string]string{}
+	}
+
+	updated.Spec = desired.Spec
+	updated.ObjectMeta.OwnerReferences = desired.ObjectMeta.OwnerReferences
+
+	if updated.ObjectMeta.Annotations == nil {
+		updated.ObjectMeta.Annotations = map[string]string{}
+	}
+	if updated.ObjectMeta.Labels == nil {
+		updated.ObjectMeta.Labels = map[string]string{}
+	}
+
+	for k, v := range desired.ObjectMeta.Annotations {
+		updated.ObjectMeta.Annotations[k] = v
+	}
+	for k, v := range desired.ObjectMeta.Labels {
+		updated.ObjectMeta.Labels[k] = v
+	}
+
+	patch := client.MergeFrom(existing)
+	if err = config.Client.Patch(ctx, updated, patch); err != nil {
+		return ERROR, fmt.Errorf("error on resource patch: %w", err)
+	}
+	config.Log.Info("applied", "deployment.name", desired.Name, "deployment.namespace", desired.Namespace)
+	return UPDATED, nil
+}
+
+func (t deploymentTask) delete(ctx context.Context, config ClusterReconcilerConfig, desired appsv1.Deployment) (Action, error) {
+	opts := []client.ListOption{
+		client.InNamespace(config.Instance.Namespace),
+		client.MatchingLabels(ClusterStaticLabels()),
+	}
+	list := &appsv1.DeploymentList{}
+	if err := config.List(ctx, list, opts...); err != nil {
+		return ERROR, fmt.Errorf("error on listing resources: %w", err)
+	}
+
+	var delete appsv1.Deployment
+	for _, dep := range list.Items {
+		delete = dep
+		if dep.Name == desired.Name && dep.Namespace == desired.Namespace {
+			return NONE, nil
+		}
+	}
+
+	if err := config.Delete(ctx, &delete); !k8serrors.IsNotFound(err) {
+		return ERROR, fmt.Errorf("error on deleting resource: %w", err)
+	} else if k8serrors.IsNotFound(err) {
+		return NONE, nil
+	}
+
+	config.Log.Info("deleted", "deployment.name", delete.Name, "deployment.namespace", delete.Namespace)
+	return DELETED, nil
 }
 
 func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Deployment {
@@ -76,7 +157,7 @@ func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Depl
 		ObjectMeta: metav1.ObjectMeta{
 			Name:        naming.Deployment(ins.Name),
 			Namespace:   ins.Namespace,
-			Labels:      ins.Labels,
+			Labels:      labels,
 			Annotations: ins.Annotations,
 		},
 		Spec: appsv1.DeploymentSpec{
@@ -95,6 +176,5 @@ func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Depl
 				//TODO: NodeSelector, Affinity, Toleration
 			},
 		},
-		//TODO:
 	}
 }

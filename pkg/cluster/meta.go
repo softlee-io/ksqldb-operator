@@ -36,10 +36,22 @@ func ClusterLabels(ins ksqldbv1alpha1.KsqldbCluster) map[string]string {
 		return fmt.Sprintf("ksqldb.softlee.io/KsqldbCluster/%s", res)
 	}
 
+	labels := ClusterStaticLabels()
+	labels["app.kubernetes.io/name"] = OperatorPrefix(ins.Name)
+	labels["app.kubernetes.io/instance"] = OperatorPrefix(ins.Namespace, ins.Name)
+	labels["app.kubernetes.io/version"] = ins.Spec.Version
+
+	if ins.Labels != nil {
+		for lk, lv := range ins.Labels {
+			labels[lk] = lv
+		}
+	}
+
+	return labels
+}
+
+func ClusterStaticLabels() map[string]string {
 	return map[string]string{
-		"app.kubernetes.io/name":      OperatorPrefix(ins.Name),
-		"app.kubernetes.io/instance":  OperatorPrefix(ins.Namespace, ins.Name),
-		"app.kubernetes.io/version":   ins.Spec.Version,
 		"app.kubernetes.io/component": "KsqldbCluster",
 		"app.kubernetes.io/part-of":   "ksqldb.softlee.io",
 	}
