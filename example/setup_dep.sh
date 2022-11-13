@@ -29,8 +29,7 @@ setup_kafka_cluster() {
     fi
 
     echo "Kafka cluster is being deployed"
-    helm install -f ./config/confluent-value.yaml \
-        $DEP_CLUSTER_NAME confluentinc/cp-helm-charts || true
+    helm install --set cp-kafka-rest.enabled=false,cp-kafka-connect.enabled=false,cp-ksql-server.enabled=false -n $NAMESPACE $DEP_CLUSTER_NAME confluentinc/cp-helm-charts || true
 }
 
 wait_for_Kafka() {
@@ -66,7 +65,7 @@ build() {
     echo "build $SERVICE"
     docker rm -f ${SERVICE}
     docker rmi $(docker images | grep "${SERVICE}") || true
-    docker build ${DIR}/. -t ${SERVICE}
+    docker build ${DIR}/. -t ${SERVICE} --platform linux/amd64
     kind load docker-image --name ${ClUSTER_NAME} ${SERVICE}
 }
 
@@ -77,7 +76,7 @@ deploy() {
     gsed -e "s,VALUE_KAFKA_BOOTSTRAP,$2,g" \
         -e "s,VALUE_SCHEMA_REGISTRY_SERVER,$3,g"  \
         -e "s,VALUE_KAFKA_TOPIC,$4,g" \
-        $DIR/k8s/deployment.yml.template > $DIR/k8s/deployment.yml
+        $DIR/k8s/deployment.yaml.template > $DIR/k8s/deployment.yaml
     
     kubectl kustomize $DIR/k8s | kubectl apply -f -
 }
@@ -93,14 +92,11 @@ if [ "$DO_DEPLOY" = true ]; then
 else
     helm repo update
     setup_kafka_cluster
-
-    CONSUMER_EXISTENCE="$(kubectl get deployment --no-headers -o custom-columns=":metadata.name" | grep "$CONSUMER_SERVICE")"
-    if [ -z "${CONSUMER_EXISTENCE}" ]; then
-        wait_for_Kafka
-        sleep 10
-        create_topic "$INCOMING_TOPIC"
-        sleep 2
-    fi
+    wait_for_Kafka
+    
+    sleep 10
+    create_topic "$INCOMING_TOPIC"
+    sleep 2
 fi
 
 echo "finished"

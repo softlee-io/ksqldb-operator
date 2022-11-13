@@ -66,6 +66,38 @@ func (t deploymentTask) Run(ctx context.Context, config ClusterReconcilerConfig)
 	return actionAfterDelete, err
 }
 
+func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Deployment {
+	// ref: https://docs.ksqldb.io/en/latest/operate-and-deploy/installation/install-ksqldb-with-docker/
+	ins.Spec.DefaultServiceID(ins.Namespace, ins.Name)
+	labels := ClusterLabels(ins)
+	annotations := ClusterAnnotations(ins)
+
+	return appsv1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        naming.Deployment(ins.Name),
+			Namespace:   ins.Namespace,
+			Labels:      labels,
+			Annotations: ins.Annotations,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &ins.Spec.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels:      labels,
+					Annotations: annotations,
+				},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{Container(ins)},
+				},
+				//TODO: NodeSelector, Affinity, Toleration
+			},
+		},
+	}
+}
+
 func (t deploymentTask) apply(ctx context.Context, config ClusterReconcilerConfig, desired appsv1.Deployment) (Action, error) {
 	existing := &appsv1.Deployment{}
 
@@ -128,53 +160,25 @@ func (t deploymentTask) delete(ctx context.Context, config ClusterReconcilerConf
 	if err := config.List(ctx, list, opts...); err != nil {
 		return ERROR, fmt.Errorf("error on listing resources: %w", err)
 	}
-
-	var delete appsv1.Deployment
-	for _, dep := range list.Items {
-		delete = dep
-		if dep.Name == desired.Name && dep.Namespace == desired.Namespace {
-			return NONE, nil
-		}
-	}
-
-	if err := config.Delete(ctx, &delete); !k8serrors.IsNotFound(err) {
-		return ERROR, fmt.Errorf("error on deleting resource: %w", err)
-	} else if k8serrors.IsNotFound(err) {
+	if len(list.Items) == 0 {
 		return NONE, nil
 	}
 
-	config.Log.Info("deleted", "deployment.name", delete.Name, "deployment.namespace", delete.Namespace)
-	return DELETED, nil
-}
+	action := NONE
+	for _, dep := range list.Items {
+		shouldDelete := true
+		if dep.Name == desired.Name && dep.Namespace == desired.Namespace {
+			shouldDelete = false
+		}
 
-func (t deploymentTask) genDesired(ins ksqldbv1alpha1.KsqldbCluster) appsv1.Deployment {
-	// ref: https://docs.ksqldb.io/en/latest/operate-and-deploy/installation/install-ksqldb-with-docker/
-	ins.Spec.DefaultServiceID(ins.Namespace, ins.Name)
-	labels := ClusterLabels(ins)
-	annotations := ClusterAnnotations(ins)
-
-	return appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:        naming.Deployment(ins.Name),
-			Namespace:   ins.Namespace,
-			Labels:      labels,
-			Annotations: ins.Annotations,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &ins.Spec.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels:      labels,
-					Annotations: annotations,
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{Container(ins)},
-				},
-				//TODO: NodeSelector, Affinity, Toleration
-			},
-		},
+		if shouldDelete {
+			action = DELETED
+			if err := config.Delete(ctx, &dep); err != nil && !k8serrors.IsNotFound(err) {
+				return ERROR, fmt.Errorf("error on deleting resource: %w", err)
+			}
+			config.Log.Info("deleted", "deployment.name", dep.Name, "deployment.namespace", dep.Namespace)
+		}
 	}
+
+	return action, nil
 }

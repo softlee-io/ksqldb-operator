@@ -10,16 +10,18 @@ dep-setup:
 deploy-service:
 	bash setup_dep.sh ${CLUSTER_NAME} ${NAMESPACE} true
 
+expose-sr:
+	kubectl port-forward service/demo-cp-control-center 9021
+
 kind-delete:
 	kind delete cluster --name ${CLUSTER_FULL_NAME}
 
 kind-setup:
-	kind create cluster --config=./config/kind-config.yaml
+	kind create cluster -n ${CLUSTER_NAME} --config ./kind-config.yaml
 	kubectl config use-context ${CLUSTER_FULL_NAME}
 	kubectl create namespace ${NAMESPACE}
-	kubectl config set-context --current --namespace=$(NAMESPACE)
+	kubectl config set-context --current --namespace=${NAMESPACE}
 	kubectl create secret docker-registry regcred --docker-username=RANDOM --docker-password=RANDOM --docker-email=RANDOM
-	kubectl apply -f ./config/metric-server.yaml
 
 cluster-setup: kind-delete kind-setup dep-setup deploy-service
 
